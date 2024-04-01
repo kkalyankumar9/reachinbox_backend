@@ -1,44 +1,29 @@
-const express = require("express");
-const passport = require('passport');
-const { Strategy: OAuth2Strategy } = require('passport-google-oauth20');
-
-require("dotenv").config()
-
+const express = require('express');
+const session = require("express-session");
+const cors = require("cors");
+const bodyParser = require('body-parser');
 const app = express();
-const PORT = process.env.PORT || 8000;
+require('dotenv').config();
 
-app.use(passport.initialize());
-app.use(passport.session());
-app.use(express.json());
+const allRouter = require('./Routes/route');
 
-passport.use(new OAuth2Strategy({
-  clientID: process.env.CLIENT_ID,
-  clientSecret: process.env.CLIENT_SECRET,
-  callbackURL: 'http://localhost:8000/auth/google/callback'
-},
-(accessToken, refreshToken, profile, done) => {
-  // Handle user authentication and save necessary details
-  return done(null, profile);
+app.use(bodyParser.json());
+app.use(cors());
+app.use(express.urlencoded({ extended: true }));
+app.use(session({
+  secret: process.env.SECRETKEY,
+  resave: false,
+  saveUninitialized: false,
 }));
 
-app.get('/auth/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
-
-app.get('/auth/google/callback', passport.authenticate('google', { failureRedirect: '/' }),
-  (req, res) => {
-    // Successful authentication, redirect or respond as needed
-    res.redirect('/dashboard');
-  });
+// MessageRoutes
+app.use('/api/mail', allRouter);
 
 
+app.get('/', async (req, res) => {
+    return res.json({ message: 'Hello World' });
+});
 
-
-
-app.listen(PORT,  () => {
-  try {
-   
- 
-    console.log(`Server is running on port ${PORT}`);
-  } catch (error) {
-    console.log(error);
-  }
+app.listen(5000 || process.env.PORT, () => {
+    console.log("Server is running on port http://localhost:8000");
 });
